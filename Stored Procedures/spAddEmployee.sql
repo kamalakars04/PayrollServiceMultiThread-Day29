@@ -1,14 +1,4 @@
-USE [Payroll_Service]
-GO
-
-/****** Object:  StoredProcedure [dbo].[AddEmployee]    Script Date: 06-11-2020 20:45:49 ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE PROCEDURE [dbo].[AddEmployee]
+﻿CREATE PROCEDURE [dbo].[AddEmployee]
 	@EmpName varchar(50),
 	@Gender varchar(1),
 	@PhoneNumber varchar(10),
@@ -23,20 +13,19 @@ as
 begin
 begin try
 begin transaction
+	DBCC Checkident('employeedetails', Reseed)
 	insert into EmployeeDetails values 
-	(@EmpName,@gender,@PhoneNumber,@PayrollId,@start_date);
+	(@EmpName,@gender,@PhoneNumber,@PayrollId,@start_date,1);
 	select @empid = empid  from EmployeeDetails where empname = @EmpName and Gender = @Gender and PhoneNumber = @PhoneNumber
-	and start_date = @start_date;
+	and start_date = @start_date and _active = 1;
 
 	insert into addresses values (@empid,@street,@city,@state);
 	if(@deptid is not null)
 		insert into dept_emp values (@empid,@deptid);
 commit transaction;
-return -1;
+return 1;
 end try
 begin catch
 rollback transaction;
 end catch
 end
-GO
-

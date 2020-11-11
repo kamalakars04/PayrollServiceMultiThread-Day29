@@ -1,21 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="fileName.cs" company="Bridgelabz">
-//   Copyright © 2018 Company
-// </copyright>
-// <creator Name="Your name"/>
-// --------------------------------------------------------------------------------------------------------------------
-namespace payrollServiceMultiThreading
-{
-    using System;
-    using System.Collections.Generic;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using payrollServiceMultiThreading;
 
-    class Program
+namespace PayrollMultiThreadMSTest
+{
+    [TestClass]
+    public class UnitTest1
     {
-        static void Main(string[] args)
+        PayrollService payrollService;
+
+       [TestInitialize]
+        public void setup()
+        {
+            payrollService = new PayrollService();
+        }
+
+        [TestMethod]
+        public void AddMultipleEmployee()
         {
             // Arrange
             List<EmployeeDetails> employeeList = new List<EmployeeDetails>();
-            EmployeeDetails employeeDetails = new EmployeeDetails();
+            EmployeeDetails employeeDetails =new EmployeeDetails();
             employeeDetails.gender = 'M';
             employeeDetails.empName = "RajKumar";
             employeeDetails.PayrollId = 1;
@@ -40,9 +45,12 @@ namespace payrollServiceMultiThreading
             employeeDetails.deptid.Add(3);
             employeeList.Add(employeeDetails);
 
-            // UC 1 Add Multiple employees
-            PayrollService payrollService = new PayrollService();
+            // Act
             bool actual = payrollService.AddEmployee(employeeList);
+            bool expected = true;
+
+            // Assert
+            Assert.AreEqual(expected, actual);
         }
     }
 }
