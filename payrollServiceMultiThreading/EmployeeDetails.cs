@@ -18,8 +18,7 @@ namespace payrollServiceMultiThreading
         public string phoneNumber { get; set; }
         public DateTime startDate { get; set; }
 
-        public int PayrollId { get; set; }
-
+        public PayrollDetails payroll = new PayrollDetails();
         public class EmpAddress
         {
             public string street { get; set; }
