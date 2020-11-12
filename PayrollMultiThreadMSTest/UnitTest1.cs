@@ -149,5 +149,28 @@ namespace PayrollMultiThreadMSTest
             // Assert
             Assert.AreEqual(expected, actual);
         }
+
+        /// <summary>
+        /// UC 6 Updates the multiple employee with threads and synchronisation.
+        /// </summary>
+        [TestMethod]
+        public void UpdateMultipleEmployeeWithThreadsAndSynchronisation()
+        {
+            // Arrange
+            UpdateSalary updateSalary = new UpdateSalary() { empId = 1, PayrollId = 1, BasePay = 75000, Deductions = 6000 };
+            List<UpdateSalary> updateSalaries = new List<UpdateSalary> { updateSalary };
+            updateSalary = new UpdateSalary() { empId = 2, PayrollId = 3, BasePay = 150000, Deductions = 6000 };
+            updateSalaries.Add(updateSalary);
+
+            // Act
+            bool actual = payrollService.UpdateMultipleEmployeeWithThreadsAndSynchronisation(updateSalaries);
+            bool expected = true;
+
+            // Assert
+            Assert.AreEqual(actual, expected);
+
+        }
+
+
     }
 }
