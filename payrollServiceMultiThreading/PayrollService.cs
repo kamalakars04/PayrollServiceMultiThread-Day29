@@ -96,7 +96,7 @@ namespace payrollServiceMultiThreading
                 Console.WriteLine($"Added Employee {emp.empName}");
                 Trace.WriteLine("added employee {0}", emp.empName);
                 return true;
-                
+
             }
             catch
             {
@@ -132,7 +132,7 @@ namespace payrollServiceMultiThreading
                 command.Connection = connection;
                 command.Transaction = transaction;
 
-                lock(payrollTableLocker)
+                lock (payrollTableLocker)
                 {
                     // If new employee payroll details are given then add them
                     command.CommandType = System.Data.CommandType.StoredProcedure;
@@ -150,7 +150,7 @@ namespace payrollServiceMultiThreading
                     emp.payroll.PayrollId = (int)returnvalue.Value;
                 }
 
-                lock(empTableLocker)
+                lock (empTableLocker)
                 {
                     Console.WriteLine($"Adding Employee {emp.empName}");
 
@@ -185,14 +185,9 @@ namespace payrollServiceMultiThreading
                         // Execute command
                         result = command.ExecuteNonQuery();
                     }
+
                     transaction.Commit();
                     connection.Close();
-                    if (result == 0)
-                    {
-                        Console.WriteLine($"Failed to add employee {emp.empName}");
-                        Trace.WriteLine("Failed to add employee {0}", emp.empName);
-                        return false;
-                    }
                     Console.WriteLine($"Added Employee {emp.empName}");
                     Trace.WriteLine("added employee {0}", emp.empName);
                     return true;
@@ -200,7 +195,7 @@ namespace payrollServiceMultiThreading
             }
             catch
             {
-                if(transaction !=null)
+                if (transaction != null)
                     transaction.Rollback();
                 if (connection.State == System.Data.ConnectionState.Open)
                     connection.Close();
@@ -315,7 +310,7 @@ namespace payrollServiceMultiThreading
         /// <returns></returns>
         public int AddToPayrollTable(PayrollDetails payrollDetails)
         {
-            lock(payrollTableLocker)
+            lock (payrollTableLocker)
             {
                 SqlConnection connection = GetConnection();
                 try
@@ -357,5 +352,116 @@ namespace payrollServiceMultiThreading
                 }
             }
         }
+
+        /// <summary>
+        /// UC 6 Updates the salary of employee.
+        /// </summary>
+        /// <param name="empid">The empid.</param>
+        /// <param name="payrollid">The payrollid.</param>
+        /// <param name="basepay">The basepay.</param>
+        /// <param name="deduction">The deduction.</param>
+        /// <returns></returns>
+        public bool UpdateEmployeeSalaryWithSynchronization(UpdateSalary updateSalary)
+        {
+            // open connection and create transaction
+            SqlConnection connection = GetConnection();
+            SqlTransaction transaction = null;
+            int result = 0;
+            
+            try
+            {
+                // create a new command in transaction
+                connection.Open();
+                transaction = connection.BeginTransaction();
+                SqlCommand command = new SqlCommand();
+                command.Transaction = transaction;
+                command.Connection = connection;
+
+                // Execute command
+                lock(payrollTableLocker)
+                {
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.CommandText = "dbo.UpdatePayroll";
+                    command.Parameters.AddWithValue("@basepay", updateSalary.BasePay);
+                    command.Parameters.AddWithValue("@deductions", updateSalary.Deductions);
+                    SqlParameter returnvalue = new SqlParameter();
+                    returnvalue.Direction = System.Data.ParameterDirection.InputOutput;
+                    returnvalue.DbType = System.Data.DbType.Int32;
+                    returnvalue.ParameterName = "@payrollid";
+                    returnvalue.Value = updateSalary.PayrollId;
+                    command.Parameters.Add(returnvalue);
+                    command.ExecuteScalar();
+                }
+                
+                lock(empTableLocker)
+                {
+                    // Execute second command
+                    command.CommandText = "dbo.UpdateEmployeeColumn";
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@empid", updateSalary.empId);
+                    command.Parameters.AddWithValue("@payrollid", returnvalue.Value);
+                    result = command.ExecuteNonQuery();
+                }
+                transaction.Commit();
+                connection.Close();
+                Trace.WriteLine("Update successful");
+                return true;
+            }
+            catch
+            {
+                if (transaction != null)
+                    transaction.Rollback();
+                Trace.WriteLine("Update Failed");
+                if (connection.State == System.Data.ConnectionState.Open)
+                    connection.Close();
+
+                return false;
+            }
+            finally
+            {
+                if (connection.State == System.Data.ConnectionState.Open)
+                    connection.Close();
+            }
+        }
+
+        /// <summary>
+        /// UC 6 Updates the multiple employee with threads and synchronisation.
+        /// </summary>
+        /// <param name="employeeDetails">The employee details.</param>
+        /// <returns></returns>
+        public bool UpdateMultipleEmployeeWithThreadsAndSynchronisation(List<UpdateSalary> updateSalaries )
+        {
+            bool result = false;
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Thread[] thread = new Thread[updateSalaries.Count];
+            int i = 0;
+            foreach (UpdateSalary employee in updateSalaries)
+            {
+                // Store all the threads
+                thread[i++] = new Thread(() =>
+                {
+                    UpdateSalary employeeInstance = new UpdateSalary();
+                    employeeInstance = employee;
+                    result = UpdateEmployeeSalaryWithSynchronization(employeeInstance);
+                });
+            }
+            // Start all the threads
+            for (i = 0; i < thread.Length; i++)
+                thread[i].Start();
+
+            // Let the main program wait untill all the threads are finished
+            for (i = 0; i < thread.Length; i++)
+            {
+                thread[i].Join();
+            }
+            stopwatch.Stop();
+            Console.WriteLine("Time taken with threads is :{0} ", stopwatch.ElapsedMilliseconds);
+            return true;
+        }
+
+
+
+
     }
 }
