@@ -132,20 +132,23 @@ namespace payrollServiceMultiThreading
                 command.Connection = connection;
                 command.Transaction = transaction;
 
-                // If new employee payroll details are given then add them
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.CommandText = "dbo.addNewPayroll";
-                command.Parameters.AddWithValue("@basepay", emp.payroll.BasePay);
-                command.Parameters.AddWithValue("@deductions", emp.payroll.Deductions);
-                SqlParameter returnvalue = new SqlParameter();
-                returnvalue.Direction = System.Data.ParameterDirection.InputOutput;
-                returnvalue.DbType = System.Data.DbType.Int32;
-                returnvalue.ParameterName = "@payrollid";
-                returnvalue.Value = emp.payroll.PayrollId;
-                command.Parameters.Add(returnvalue);
-                command.ExecuteScalar();
-                Trace.WriteLine("AddPayroll Successfull");
-                emp.payroll.PayrollId = (int)returnvalue.Value;
+                lock(payrollTableLocker)
+                {
+                    // If new employee payroll details are given then add them
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.CommandText = "dbo.addNewPayroll";
+                    command.Parameters.AddWithValue("@basepay", emp.payroll.BasePay);
+                    command.Parameters.AddWithValue("@deductions", emp.payroll.Deductions);
+                    SqlParameter returnvalue = new SqlParameter();
+                    returnvalue.Direction = System.Data.ParameterDirection.InputOutput;
+                    returnvalue.DbType = System.Data.DbType.Int32;
+                    returnvalue.ParameterName = "@payrollid";
+                    returnvalue.Value = emp.payroll.PayrollId;
+                    command.Parameters.Add(returnvalue);
+                    command.ExecuteScalar();
+                    Trace.WriteLine("AddPayroll Successfull");
+                    emp.payroll.PayrollId = (int)returnvalue.Value;
+                }
 
                 lock(empTableLocker)
                 {
