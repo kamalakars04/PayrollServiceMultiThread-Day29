@@ -20,6 +20,9 @@ namespace payrollServiceMultiThreading
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         public static string connectionString = @"Server=LAPTOP-CTKSHLKD\SQLEXPRESS; Initial Catalog =payroll_service; User ID = sa; Password=kamal@99";
 
+        // UC 3 Locking the object for synchronization
+        private readonly Object _Locker = new object();
+        
         /// <summary>
         /// Gets the connection.
         /// </summary>
@@ -80,11 +83,18 @@ namespace payrollServiceMultiThreading
                     // Execute command
                     result = command.ExecuteNonQuery();
                 }
-            connection.Close();
-            if (result == 0)
+
+                connection.Close();
+                if (result == 0)
+                {
+                    Console.WriteLine($"Failed to add employee {emp.empName}");
+                    Trace.WriteLine("Failed to add employee {0}", emp.empName);
                     return false;
+                }
+                Console.WriteLine($"Added Employee {emp.empName}");
+                Trace.WriteLine("added employee {0}", emp.empName);
                 return true;
-        }
+            }
             catch
             {
                 if (connection.State == System.Data.ConnectionState.Open)
@@ -93,9 +103,9 @@ namespace payrollServiceMultiThreading
             }
             finally
             {
-                Console.WriteLine($"Added Employee {emp.empName}");
                 if (connection.State == System.Data.ConnectionState.Open)
                     connection.Close();
+                Trace.Flush();
             }
         }
 
