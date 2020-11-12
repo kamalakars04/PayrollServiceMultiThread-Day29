@@ -20,9 +20,9 @@ namespace payrollServiceMultiThreading
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         public static string connectionString = @"Server=LAPTOP-CTKSHLKD\SQLEXPRESS; Initial Catalog =payroll_service; User ID = sa; Password=kamal@99";
 
-        // UC 3 Locking the object for synchronization
+        // UC 3 Locking the object for synchronization of threads
         private readonly Object _Locker = new object();
-        
+
         /// <summary>
         /// Gets the connection.
         /// </summary>
@@ -42,7 +42,7 @@ namespace payrollServiceMultiThreading
         public bool AddEmployee(EmployeeDetails emp)
         {
             // open connection and create transaction
-            SqlConnection connection =  GetConnection();
+            SqlConnection connection = GetConnection();
             connection.Open();
             try
             {
@@ -62,7 +62,7 @@ namespace payrollServiceMultiThreading
                 command.Parameters.AddWithValue("@street", emp.empAddress.street);
                 command.Parameters.AddWithValue("@city", emp.empAddress.city);
                 command.Parameters.AddWithValue("@state", emp.empAddress.state);
-                
+
 
                 // Parallel concept if dept is given
                 Parallel.ForEach(emp.deptid, dept =>
@@ -73,12 +73,12 @@ namespace payrollServiceMultiThreading
                     command.Parameters.Add(parameter);
                     parameter.Value = dept;
 
-                       // Execute command
-                       result = command.ExecuteNonQuery();
+                    // Execute command
+                    result = command.ExecuteNonQuery();
                 });
 
                 // If dept is not given add as a single contact
-                if(emp.deptid.Count == 0)
+                if (emp.deptid.Count == 0)
                 {
                     // Execute command
                     result = command.ExecuteNonQuery();
@@ -118,14 +118,14 @@ namespace payrollServiceMultiThreading
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            foreach(EmployeeDetails employee in employeeDetails)
+            foreach (EmployeeDetails employee in employeeDetails)
             {
                 bool result = AddEmployee(employee);
                 if (result == false)
                     return false;
             }
             stopwatch.Stop();
-            Console.WriteLine("Time taken without threads is :{0} ",stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Time taken without threads is :{0} ", stopwatch.ElapsedMilliseconds);
             return true;
         }
 
@@ -144,7 +144,7 @@ namespace payrollServiceMultiThreading
             foreach (EmployeeDetails employee in employeeDetails)
             {
                 // Store all the threads
-                thread[i++] =  new Thread(() => 
+                thread[i++] = new Thread(() =>
                 {
                     EmployeeDetails employeeInstance = new EmployeeDetails();
                     employeeInstance = employee;
