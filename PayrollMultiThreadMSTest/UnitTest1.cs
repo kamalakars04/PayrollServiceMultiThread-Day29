@@ -32,7 +32,7 @@ namespace PayrollMultiThreadMSTest
             EmployeeDetails employeeDetails =new EmployeeDetails();
             employeeDetails.gender = 'M';
             employeeDetails.empName = "RajKumar";
-            employeeDetails.PayrollId = 1;
+            employeeDetails.payroll.PayrollId = 1;
             employeeDetails.phoneNumber = "7412589633";
             employeeDetails.startDate = new System.DateTime(2017, 08, 26);
             employeeDetails.empAddress.city = "trivandrum";
@@ -45,7 +45,7 @@ namespace PayrollMultiThreadMSTest
             employeeDetails = new EmployeeDetails();
             employeeDetails.gender = 'F';
             employeeDetails.empName = "Rani";
-            employeeDetails.PayrollId = 1;
+            employeeDetails.payroll.PayrollId = 1;
             employeeDetails.phoneNumber = "8569236458";
             employeeDetails.startDate = new System.DateTime(2017, 05, 26);
             employeeDetails.empAddress.city = "Hyderabad";
@@ -55,7 +55,7 @@ namespace PayrollMultiThreadMSTest
             employeeList.Add(employeeDetails);
 
             // Act
-            bool actual = payrollService.AddEmployee(employeeList);
+            bool actual = payrollService.AddMultipleEmployee(employeeList);
             bool expected = true;
 
             // Assert
@@ -73,7 +73,7 @@ namespace PayrollMultiThreadMSTest
             EmployeeDetails employeeDetails = new EmployeeDetails();
             employeeDetails.gender = 'M';
             employeeDetails.empName = "Charan";
-            employeeDetails.PayrollId = 3;
+            employeeDetails.payroll.PayrollId = 3;
             employeeDetails.phoneNumber = "8528528528";
             employeeDetails.startDate = new System.DateTime(2013, 08, 26);
             employeeDetails.empAddress.city = "Kochi";
@@ -86,7 +86,7 @@ namespace PayrollMultiThreadMSTest
             employeeDetails = new EmployeeDetails();
             employeeDetails.gender = 'F';
             employeeDetails.empName = "Sahana";
-            employeeDetails.PayrollId = 2;
+            employeeDetails.payroll.PayrollId = 2;
             employeeDetails.phoneNumber = "4564564564";
             employeeDetails.startDate = new System.DateTime(2013, 05, 26);
             employeeDetails.empAddress.city = "Chennai";
@@ -96,7 +96,54 @@ namespace PayrollMultiThreadMSTest
             employeeList.Add(employeeDetails);
 
             // Act
-            bool actual = payrollService.AddEmployeeWithThreads(employeeList);
+            bool actual = payrollService.AddMultipleEmployeeWithThreads(employeeList);
+            bool expected = true;
+
+            // Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        /// TC  5 Adds the multiple employee with threads and synchronisation to multiple tables
+        /// </summary>
+        [TestMethod]
+        public void AddMultipleEmployeeWithThreadsAndSynchronisation()
+        {
+            // Arrange
+            List<EmployeeDetails> employeeList = new List<EmployeeDetails>();
+            List<PayrollDetails> payrolls = new List<PayrollDetails>();
+            EmployeeDetails employeeDetails = new EmployeeDetails();
+            employeeDetails.gender = 'M';
+            employeeDetails.empName = "Sriraj";
+            employeeDetails.payroll.PayrollId = 5;
+            employeeDetails.payroll.BasePay = 90000;
+            employeeDetails.payroll.Deductions = 1000;
+            employeeDetails.phoneNumber = "8528528528"; 
+            employeeDetails.startDate = new System.DateTime(2013, 08, 26);
+            employeeDetails.empAddress.city = "karimnagar";
+            employeeDetails.empAddress.state = "Telangana";
+            employeeDetails.empAddress.street = "BackStreet";
+            employeeDetails.deptid.Add(2);
+            PayrollDetails payroll = new PayrollDetails() { BasePay = 90000, Deductions = 1000, PayrollId = 5 };
+            employeeList.Add(employeeDetails);
+
+            // Second employee
+            employeeDetails = new EmployeeDetails();
+            employeeDetails.gender = 'F';
+            employeeDetails.empName = "Valli";
+            employeeDetails.payroll.PayrollId = 6;
+            employeeDetails.payroll.BasePay = 9000;
+            employeeDetails.payroll.Deductions = 1000;
+            employeeDetails.phoneNumber = "4564564564";
+            employeeDetails.startDate = new System.DateTime(2012, 05, 26);
+            employeeDetails.empAddress.city = "panaji";
+            employeeDetails.empAddress.state = "Goa";
+            employeeDetails.empAddress.street = "Gn nagar";
+            employeeDetails.deptid.Add(3);
+            employeeList.Add(employeeDetails);
+
+            // Act
+            bool actual = payrollService.AddMultipleEmployeeWithThreadsAndSynchronisation(employeeList);
             bool expected = true;
 
             // Assert
